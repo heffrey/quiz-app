@@ -12,91 +12,136 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Quiz App</title>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Handlee">
     <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">   
     <link rel="stylesheet" type="text/css" href="css/quiz-app.css">
     <script src="js/jquery-3.3.1.min.js"></script>
     <script src="js/jquery.serializeObject.min.js"></script>
     <script src="js/popper.min.js"></script>   
-    <script src="js/bootstrap-toggle.min.js"></script>          
     <script src="js/bootstrap.min.js"></script>   
     <script src="js/bootstrap3-typeahead.min.js"></script>  
     <script src="js/bootstrap.confirmation.min.js"></script>  
   </head>
   
   <script> 
+    const questions = [{"text": "nil"},{"text": "Test question", "type": "truefalse"}];
         
     function clicked(a)
-    { //         a  b   c   d   e
-    // x -> 68 98 123 146 169 
-    // y- > 120 152 177 199 227 251 274 296 322 346 372 395 421 445 471 490 518 543 565 590 613 633 662 685 707 730
-    console.info(a);    
-    if (a.target.id === "scantron")
     {
-
-    var letter = "";
-    if (a.layerX <= 111) 
-    {
-    letter = "A";
-    }
-    else if (a.layerX > 111 && a.layerX <= 141) 
-    {
-    letter = "B";
-    }
-    else if (a.layerX > 141 && a.layerX <= 169) 
-    {
-    letter = "C";
-    }
-    else if (a.layerX > 146 && a.layerX <= 197) 
-    {
-    letter = "D";
-    }
-    else
-    {
-    letter = "E";
-    }
-    
-    
-    const questions = [{"text": "nil"},{"text": "Test question", "type": "truefalse"}];
-    
-    var number = Math.round((a.layerY - 133) / 29);
-    if (number > 0) {
-      coord.innerHTML = ( "<h2>" + number + ":" + letter + " </h2><h2>x: " + a.layerX + " y:" + a.layerY + " </h2>");
-      
-      drawPencil(number + letter, a.target, a.clientX, a.clientY);
-
-    }
-    }
+      const A = 98, B = 124, C = 155, D = 183;
+      if (a.target.id === "scantron")
+      {
+        var letter = "";
+        if (a.layerX <= A) 
+        {
+          letter = "A";
+        }
+        else if (a.layerX > A && a.layerX <= B) 
+        {
+          letter = "B";
+        }
+        else if (a.layerX > B && a.layerX <= C) 
+        {
+          letter = "C";
+        }
+        else if (a.layerX > C && a.layerX <= D) 
+        {
+          letter = "D";
+        }
+        else
+        {
+          letter = "E";
+        }
+        
+        var number = Math.round((a.layerY - 133) / 29);
+        if (number > 0)
+        {
+          coord.innerHTML = ( "<h4>" + number + ":" + letter + "</h4><h4> x: " + a.layerX + " y:" + a.layerY + " </h4>");
+          drawPencil(number + letter, a.target, a.clientX, a.clientY);
+        }
+      }
     }
    
+  function writeName(name) 
+  {
+    if ($("#writtenName")[0])
+    {
+      c= document.getElementById("writtenName");
+      c.innerHTML = name;
+    }
+    else 
+    {
+      const x = Number($("#scantron")[0].x);
+      const y = Number($("#scantron")[0].y);      
 
+      s = document.createElement("div");
+      s.id = `writtenDiv`;
+      s.width = s.height = 100;
+      s.style.position = "fixed";
+      s.style.top = (y + 460) + "px";
+      s.style.position = "fixed";
+      s.style.left = (x + 350) + "px";
+      s.dataset.relx = 350;
+      s.dataset.rely = 460;
+      $("#scantron")[0].parentElement.appendChild(s);
 
-function drawPencil(id, target, x, y)
-{
+      c = document.createElement("div");
+      c.id = `writtenName`;
+      s.appendChild(c);
+      c.style.transformOrigin = `top left`;
+      c.style.transform = `rotate(90deg)`;
+      c.style.fontFamily= `'Handlee', cursive`;
+      c.style.fontSize = `30px`;
+      c.innerHTML = name;
+    }
+  }
+
+  function resize(a, b)
+  {
+    const x = Number($("#scantron")[0].x);
+    const y = Number($("#scantron")[0].y);
+    $("canvas").each(
+    (a, b) => { b.style.left = x - 10 + Number(b.dataset.relx) + "px"; b.style.top = y + Number(b.dataset.rely) + "px"; }  
+    )
+    $("#writtenDiv").each(
+    (a, b) => { b.style.left = x + Number(b.dataset.relx) + "px"; b.style.top = y + Number(b.dataset.rely) + "px"; }  
+    )
+
+  }
+
+  function drawPencil(id, target, x, y)
+  {
       c = document.createElement("canvas");
       c.id = id;
-      c.width = 30;
+      c.width = 20;
       c.height = 10;
+      c.dataset.relx = Number(x - $("#scantron")[0].x);
+      c.dataset.rely = Number(y - $("#scantron")[0].y); 
       ctx = c.getContext("2d");
       ctx.moveTo(0, 0);
-      ctx.lineTo(20, 4);
+      ctx.lineTo(22, 4);
       ctx.lineTo(1, 2);
-      ctx.lineTo(10, 1);
+      ctx.lineTo(20, 1);
       ctx.lineTo(4, 4);
-      ctx.lineTo(25, -1);
-      ctx.lineTo(0, -2);
+      ctx.lineTo(18, 0);
+      ctx.lineTo(0, 0);
       ctx.lineTo(19, 1);
       ctx.stroke(); 
       ctx.moveTo(0,0);
-      ctx.fillText(id,20,10)
       target.parentElement.appendChild(c);
       c.style.position = "fixed";
-      c.style.left = x + "px";
+      c.style.left = x-10 + "px";
       c.style.top = y + "px";
-}
+  }
+
+  window.addEventListener("resize", resize);
+  document.addEventListener("click", clicked);
+  $( () => 
+    $("#studentName").keyup((a) => writeName(a.target.value) )
+  );
 
 
-    document.addEventListener("click", clicked);
-        
   </script>   
   <body>
     
@@ -111,15 +156,19 @@ function drawPencil(id, target, x, y)
           </div>
         </div>
         <div class="row">
-          <div class="col">
-            Student Name: 
-          </div>
-        </div>
-        <div class="row">
-          <div class="col" id="coord">Questions</div>
-          <div class="col" id="testdiv">Questions</div>
+          <div class="col bg-white shadow rounded">
+            <h2>Final Exam</h2>
+            <form>
+              <div class="form-group">
+                <label for="studentName">Student name</label>
+                <input type="name" class="form-control" id="studentName" placeholder="Name">
+               </div>
+            </form> 
 
-          <div class="col"><img id="scantron" style="position: fixed;" src="23160.png"></div>
+            <div class="row"><div class="col" id="coord">Questions</div></div>
+            <div class="row"><div class="col" id="testdiv">Questions</div></div>
+          </div>
+          <div class="col"><img id="scantron" draggable="false" style="position: fixed;" src="23160.png"></div>
         </div>
       </div>
     </div>
