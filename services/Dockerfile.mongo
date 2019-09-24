@@ -1,0 +1,8 @@
+FROM mongo:latest
+
+MAINTAINER Jeff Whiteside
+
+EXPOSE 27017
+
+VOLUME /data/db db
+
