@@ -22,18 +22,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     <script src="js/bootstrap.min.js"></script>   
     <script src="js/bootstrap3-typeahead.min.js"></script>  
     <script src="js/bootstrap.confirmation.min.js"></script>  
+    <script src="js/html2canvas.min.js"></script>  
   </head>
   
   <script> 
     const questions = [{"text": "nil"},{"text": "Test question", "type": "truefalse"}];
-        
+    page = 0; 
+   
+    function nextPage ()
+    { 
+      page ++;
+    }  
+         
     function clicked(a)
     {
       const A = 98, B = 124, C = 155, D = 183;
       if (a.target.id === "scantron")
       {
         var letter = "";
-        if (a.layerX <= A) 
+        if (a.layerX <= A && a.layerX > 30) 
         {
           letter = "A";
         }
@@ -49,21 +56,48 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         {
           letter = "D";
         }
-        else
+        else if (a.layerX > D && a.layerX < 223)
         {
           letter = "E";
         }
-        
-        var number = Math.round((a.layerY - 133) / 29);
-        if (number > 0)
+        if (letter == "") return;
+ 
+        var number = Math.round((a.layerY - window.scrollY - 133) / 29);
+        if (number > 0 && a.layerY > 151)
         {
-          coord.innerHTML = ( "<h4>" + number + ":" + letter + "</h4><h4> x: " + a.layerX + " y:" + a.layerY + " </h4>");
           drawPencil(number + letter, a.target, a.clientX, a.clientY);
         }
       }
     }
-   
-  function writeName(name) 
+  
+  function writeDate()
+  { const dd = new Date();
+    const d = dd.getMonth() + "/" + dd.getDate() + "/" + dd.getFullYear();  
+    const x = Number($("#scantron")[0].x);
+    const y = Number($("#scantron")[0].y);
+
+    s = document.createElement("div");
+    s.className = `writtenDiv`;
+    s.width = s.height = 100;
+    s.style.position = "fixed";
+    s.style.top = (y + 460) + "px";
+    s.style.position = "fixed";
+    s.style.left = (x + 300) + "px";
+    s.dataset.relx = 300;
+    s.dataset.rely = 460;
+    $("#scantron")[0].parentElement.appendChild(s);
+
+    c = document.createElement("div");
+    c.id = `writtenDate`;
+    s.appendChild(c);
+    c.style.transformOrigin = `top left`;
+    c.style.transform = `rotate(90deg)`;
+    c.style.fontFamily= `'Handlee', cursive`;
+    c.style.fontSize = `19px`;
+    c.innerHTML = d;
+  }
+ 
+  function writeName(name)
   {
     if ($("#writtenName")[0])
     {
@@ -76,7 +110,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       const y = Number($("#scantron")[0].y);      
 
       s = document.createElement("div");
-      s.id = `writtenDiv`;
+      s.className = `writtenDiv`;
       s.width = s.height = 100;
       s.style.position = "fixed";
       s.style.top = (y + 460) + "px";
@@ -102,71 +136,121 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     const x = Number($("#scantron")[0].x);
     const y = Number($("#scantron")[0].y);
     $("canvas").each(
-    (a, b) => { b.style.left = x - 10 + Number(b.dataset.relx) + "px"; b.style.top = y + Number(b.dataset.rely) + "px"; }  
+    (a, b) => { b.style.left = x - 10 + Number(b.dataset.relx) + "px"; b.style.top = y - 10 + Number(b.dataset.rely) + "px"; }  
     )
-    $("#writtenDiv").each(
+    $(".writtenDiv").each(
     (a, b) => { b.style.left = x + Number(b.dataset.relx) + "px"; b.style.top = y + Number(b.dataset.rely) + "px"; }  
     )
 
   }
 
   function drawPencil(id, target, x, y)
-  {
+  {   
       c = document.createElement("canvas");
+      c.dataset.container="body";
+      c.dataset.toggle="popover";
+      c.dataset.placement="right";
+      let question = (id.length === 3) ? id[0] + id[1] : id[0]; 
+      let letter = id[id.length-1];
+      c.dataset.content=`You already marked ${letter} for question ${question}. Click the mark again to dismiss this.`;
       c.id = id;
       c.width = 20;
-      c.height = 10;
+      c.height = 20;
       c.dataset.relx = Number(x - $("#scantron")[0].x);
       c.dataset.rely = Number(y - $("#scantron")[0].y); 
       ctx = c.getContext("2d");
-      ctx.moveTo(0, 0);
-      ctx.lineTo(22, 4);
-      ctx.lineTo(1, 2);
-      ctx.lineTo(20, 1);
-      ctx.lineTo(4, 4);
-      ctx.lineTo(18, 0);
-      ctx.lineTo(0, 0);
-      ctx.lineTo(19, 1);
+      ctx.moveTo(0, 10);
+      ctx.lineTo(20, 14);
+      ctx.lineTo(1, 12);
+      ctx.lineTo(20, 11);
+      ctx.lineTo(4, 14);
+      ctx.lineTo(18, 10);
+      ctx.lineTo(0, 10);
+      ctx.lineTo(19, 11);
       ctx.stroke(); 
       ctx.moveTo(0,0);
       target.parentElement.appendChild(c);
       c.style.position = "fixed";
       c.style.left = x-10 + "px";
-      c.style.top = y + "px";
+      c.style.top = y-10 + "px";
+      $(function () {
+        $('[data-toggle="popover"]').popover();
+      }); 
   }
-
   window.addEventListener("resize", resize);
   document.addEventListener("click", clicked);
-  $( () => 
-    $("#studentName").keyup((a) => writeName(a.target.value) )
-  );
-
+  $( () => { 
+    $("#studentName").keyup((a)=>writeName(a.target.value));
+    $("#studentName").change((a)=>writeName(a.target.value));
+    $("#studentName").submit((a)=>console.log(a.target.value)); 
+    $("form").submit((a)=>a.preventDefault());
+    writeDate();
+  });
+   
+  $.get("employees.json", function(data){
+        a = new Array();
+        data["Report_Entry"].forEach((obj) => a.push(obj["Preferred_Name_-_First_Name"] + " " + obj["Legal_Name_-_Last_Name"]));  
+        $("#studentName").typeahead({ source: a });
+      },'json');
+      
 
   </script>   
   <body>
-    
-    
-    
     
     <div class="container" id="top-container">
       <div class="container" id="main-container">
         <div class="row">
           <div class="col">
-            <h1>Security University</h1>
+           <!--  <h1 class="mt-2">Security University</h1> -->
           </div>
         </div>
         <div class="row">
-          <div class="col bg-white shadow rounded">
-            <h2>Final Exam</h2>
+          <div class="col mt-4 bg-white shadow rounded">
+            <h4 class="mt-4">SEC101: Security Awareness Exam</h4>
+            <hr>
             <form>
               <div class="form-group">
-                <label for="studentName">Student name</label>
-                <input type="name" class="form-control" id="studentName" placeholder="Name">
-               </div>
-            </form> 
+                <h4>Overview</h4>
 
-            <div class="row"><div class="col" id="coord">Questions</div></div>
-            <div class="row"><div class="col" id="testdiv">Questions</div></div>
+                <label for="studentName">Student name</label>
+                <input type="name" class="form-control" id="studentName" aria-describedby="nameHelp" placeholder="Name">
+                <small id="nameHelp" class="form-text text-muted">
+                   The test will be tailored to your role. Please start by providing your name. This will be matched with your student information.
+                </small>
+              </div>
+            </form> 
+            <div class="row">
+              <div class="col" id="questions">
+                <h4>Questions</h4>
+                <div class="alert alert-secondary" role="alert">
+                  Use the Scantron&reg; provided at right to complete your test. <br /> Don't forget to use a <strong>No. 2 Pencil &#9999; </strong> (just kidding, click the Scantron&reg; where you would normally mark with a pencil)
+                </div>
+                  <ol>
+                  <li start="1">Question</li>
+                  <ol type="A"><li>test</li><li>test 2</li></ol>
+                  <li>Question</li>
+                  <ol type="A"><li>test</li><li>test 2</li></ol>
+                  <li>Question</li>
+                  <ol type="A"><li>test</li><li>test 2</li></ol>
+                  <li>Question</li>
+                  <ol type="A"><li>test</li><li>test 2</li></ol>
+                  <li>Question</li>
+                  <ol type="A"><li>test</li><li>test 2</li></ol>
+                  <li>Question</li>
+                  <ol type="A"><li>test</li><li>test 2</li></ol>
+                  <li>Question</li>
+                  <ol type="A"><li>test</li><li>test 2</li></ol>
+                </ol>
+                <nav>
+                  <ul class="pagination">
+                   <li class="page-item"><a class="page-link" href="#">1</a></li>
+                   <li class="page-item"><a class="page-link" href="#">2</a></li>
+                   <li class="page-item"><a class="page-link" href="#">3</a></li>                
+                   <li class="page-item"><a class="page-link" href="#">></a></li>                
+                 </ul>
+               </nav>
+              </div>
+            </div>
           </div>
           <div class="col"><img id="scantron" draggable="false" style="position: fixed;" src="23160.png"></div>
         </div>
@@ -180,4 +264,3 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       </small>
     </footer>
   </body>
-</html>
