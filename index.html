@@ -1,266 +1,402 @@
 <!-- Copyright 2019 Jeff Whiteside
-  
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-  
-  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-  
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
 
+
+
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+
+
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+
+
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Quiz App</title>
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Handlee">
-    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">   
-    <link rel="stylesheet" type="text/css" href="css/quiz-app.css">
-    <script src="js/jquery-3.3.1.min.js"></script>
-    <script src="js/jquery.serializeObject.min.js"></script>
-    <script src="js/popper.min.js"></script>   
-    <script src="js/bootstrap.min.js"></script>   
-    <script src="js/bootstrap3-typeahead.min.js"></script>  
-    <script src="js/bootstrap.confirmation.min.js"></script>  
-    <script src="js/html2canvas.min.js"></script>  
-  </head>
-  
-  <script> 
-    const questions = [{"text": "nil"},{"text": "Test question", "type": "truefalse"}];
-    page = 0; 
-   
-    function nextPage ()
-    { 
-      page ++;
-    }  
-         
-    function clicked(a)
-    {
-      const A = 98, B = 124, C = 155, D = 183;
-      if (a.target.id === "scantron")
-      {
-        var letter = "";
-        if (a.layerX <= A && a.layerX > 30) 
+    <head>
+        <meta charset="utf-8"/>
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
+        <title>
+            Quiz App
+        </title>
+        <link href="https://fonts.googleapis.com/css?family=Handlee" rel="stylesheet"/>
+        <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+        <link href="css/quiz-app.css" rel="stylesheet" type="text/css"/>
+        <script src="js/jquery-3.3.1.min.js">
+        </script>
+        <script src="js/jquery.serializeObject.min.js">
+        </script>
+        <script src="js/popper.min.js">
+        </script>
+        <script src="js/bootstrap.min.js">
+        </script>
+        <script src="js/bootstrap3-typeahead.min.js">
+        </script>
+        <script src="js/bootstrap.confirmation.min.js">
+        </script>
+        <script src="js/html2canvas.min.js">
+        </script>
+    </head>
+    <script>
+
+        const QUESTION_POOL = [
+          {"text": "Test question", "answer": "Answer", "distractors": [""], "type": "multchoice"},
+          {"text": "Test question", "answer": "Answer", "distractors": [""], "type": "multchoice"},
+          {"text": "Test question", "answer": "Answer", "distractors": [""], "type": "multchoice"},
+          {"text": "Test question", "answer": "Answer", "distractors": [""], "type": "truefalse"}
+        ];
+
+        const MAX_PAGE = 3;
+        const PAGES = [0,1,2,3];
+        page = 0; 
+
+        function turnPage (page)
+        { 
+                const PAGES = [0,1,2,3];
+                PAGES.forEach((a,b) => $(`.pg-${b}`).hide());
+                $(`.pg-${page}`).show();
+        } 
+
+        function clickPage(a)
         {
-          letter = "A";
+          if (a === ">") nextPage();
+          else turnPage(a);
         }
-        else if (a.layerX > A && a.layerX <= B) 
+
+        function nextPage()
         {
-          letter = "B";
+                if (page >= MAX_PAGE) return;
+                if (page == 0)
+                { // Return if they are not a valid employee
+                        if (employees.filter( (a) => a.name == $(`#studentName`)[0].value ).length == 0)
+                                return;
+                } 
+                turnPage (page += 1);
+        }  
+
+
+        function clicked(a)
+        { 
+                if (page === 0) return; // the scantron is disabled on page 0
+                const A = 98, B = 124, C = 155, D = 183;
+                const number = Math.round((a.layerY - window.scrollY - 133) / 29);
+                if (number > 25) return;
+                if (a.target.id === "scantron")
+                {
+                        var letter = "";
+                        if (a.layerX <= A && a.layerX > 30) 
+                        {
+                                letter = "A";
+                        }
+                        else if (a.layerX > A && a.layerX <= B) 
+                        {
+                                letter = "B";
+                        }
+                        else if (a.layerX > B && a.layerX <= C) 
+                        {
+                                letter = "C";
+                        }
+                        else if (a.layerX > C && a.layerX <= D) 
+                        {
+                                letter = "D";
+                        }
+                        else if (a.layerX > D && a.layerX < 223)
+                        {
+                                letter = "E";
+                        }
+                        if (letter == "") return;
+
+                        if (number > 0 && a.layerY > 151)
+                        {
+                                drawPencil(number + letter, a.target, a.clientX, a.clientY);
+                        }
+                }
         }
-        else if (a.layerX > B && a.layerX <= C) 
+
+
+
+
+        function writeDate()
         {
-          letter = "C";
+                const dd = new Date();
+                const d = dd.getMonth() + "/" + dd.getDate() + "/" + dd.getFullYear();  
+                const x = Number($("#scantron")[0].x);
+                const y = Number($("#scantron")[0].y);
+
+          
+          s = document.createElement("div");
+                s.className = `writtenDiv`;
+                s.style.position = "fixed";
+                s.style.top = (y + 460) + "px";
+                s.style.position = "fixed";
+                s.style.left = (x + 300) + "px";
+                s.dataset.relx = 300;
+                s.dataset.rely = 460;
+                $("#scantron")[0].parentElement.appendChild(s);
+          
+          c = document.createElement("div");
+                c.id = `writtenDate`;
+                s.appendChild(c);
+                c.style.transformOrigin = `top left`;
+                c.style.transform = `rotate(90deg)`;
+                c.style.fontFamily= `'Handlee', cursive`;
+                c.style.fontSize = `19px`;
+                c.innerHTML = d;
         }
-        else if (a.layerX > C && a.layerX <= D) 
+
+
+
+
+        function writeName(name)
         {
-          letter = "D";
+                if ($("#writtenName")[0])
+                {
+                        c= document.getElementById("writtenName");
+                        c.innerHTML = name;
+                }
+                else 
+                {
+                        const x = Number($("#scantron")[0].x);
+                        const y = Number($("#scantron")[0].y);      
+          
+            s = document.createElement("div");
+                        s.className = `writtenDiv`;
+                        s.style.position = "fixed";
+                        s.style.top = (y + 460) + "px";
+                        s.style.position = "fixed";
+                        s.style.left = (x + 350) + "px";
+                        s.dataset.relx = 350;
+                        s.dataset.rely = 460;
+                        $("#scantron")[0].parentElement.appendChild(s);
+
+            
+            
+            
+            c = document.createElement("div");
+                        c.id = `writtenName`;
+                        s.appendChild(c);
+                        c.style.transformOrigin = `top left`;
+                        c.style.transform = `rotate(90deg)`;
+                        c.style.fontFamily= `'Handlee', cursive`;
+                        c.style.fontSize = `30px`;
+                        c.innerHTML = name;
+                }
         }
-        else if (a.layerX > D && a.layerX < 223)
+
+
+
+
+        function moveItems(a, b)
         {
-          letter = "E";
+                const x = Number($("#scantron")[0].x);
+                const y = Number($("#scantron")[0].y);
+                $("canvas").each(
+                  (a, b) => { b.style.left = x - 10 + Number(b.dataset.relx) + "px"; b.style.top = y - 10 + Number(b.dataset.rely) + "px"; }  
+                )
+
+                $(".writtenDiv").each(
+                  (a, b) => { b.style.left = x + Number(b.dataset.relx) + "px"; b.style.top = y + Number(b.dataset.rely) + "px"; }  
+                )
         }
-        if (letter == "") return;
- 
-        var number = Math.round((a.layerY - window.scrollY - 133) / 29);
-        if (number > 0 && a.layerY > 151)
-        {
-          drawPencil(number + letter, a.target, a.clientX, a.clientY);
+
+        const NUMBER_WORDS = { 
+          1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten",
+          11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen", 16: "sixteen", 17: "seventeen", 18: "eighteen",
+          19: "nineteen", 20: "twenty", 21: "twenty-one", 22: "twenty-two", 23: "twenty-three", 24: "twenty-four", 25: "twenty-five"
+        };
+
+
+        function drawPencil(id, target, x, y)
+        {   
+                c = document.createElement("canvas");
+                c.dataset.container="body";
+                c.dataset.toggle="popover";
+                c.dataset.placement="right";
+                let question = (id.length === 3) ? id[0] + id[1] : id[0]; 
+                let letter = id[id.length-1];
+                c.dataset.content=`You already marked <b>letter ${letter}</b> for <b>question ${NUMBER_WORDS[question]}</b>. Click the mark again to dismiss this popup.`;
+                c.id = id;
+                c.width = 20;
+                c.height = 20;
+                c.dataset.relx = Number(x - $("#scantron")[0].x);
+                c.dataset.rely = Number(y - $("#scantron")[0].y); 
+                ctx = c.getContext("2d");
+                ctx.moveTo(0, 10);
+                ctx.lineTo(20, 14);
+                ctx.lineTo(1, 12);
+                ctx.lineTo(20, 11);
+                ctx.lineTo(4, 14);
+                ctx.lineTo(18, 10);
+                ctx.lineTo(0, 10);
+                ctx.lineTo(19, 11);
+                ctx.stroke(); 
+                ctx.moveTo(0,0);
+                target.parentElement.appendChild(c);
+                c.style.position = "fixed";
+                c.style.left = x-10 + "px";
+                c.style.top = y-10 + "px";
+                $(function () {
+                                $('[data-toggle="popover"]').popover({"html": true});
+                                }); 
         }
-      }
-    }
-  
-  function writeDate()
-  { const dd = new Date();
-    const d = dd.getMonth() + "/" + dd.getDate() + "/" + dd.getFullYear();  
-    const x = Number($("#scantron")[0].x);
-    const y = Number($("#scantron")[0].y);
+        window.addEventListener("resize", moveItems);
+        document.addEventListener("click", clicked);
+        $( () => {     
+                        $("#studentName").keyup((a)=>writeName(a.target.value));
+                        $("#studentName").change((a)=>writeName(a.target.value));
+                        $("#studentName").submit((a)=>console.log(a.target.value)); 
+                        $(".page-link").click((a)=>clickPage(a.target.innerText));
+                        $("form").submit((a)=>
+                                        {
+                                        nextPage();
+                                        a.preventDefault();
+                                        }
+                                        );
+                        turnPage(0);
+                        writeDate();
+        });
 
-    s = document.createElement("div");
-    s.className = `writtenDiv`;
-    s.width = s.height = 100;
-    s.style.position = "fixed";
-    s.style.top = (y + 460) + "px";
-    s.style.position = "fixed";
-    s.style.left = (x + 300) + "px";
-    s.dataset.relx = 300;
-    s.dataset.rely = 460;
-    $("#scantron")[0].parentElement.appendChild(s);
 
-    c = document.createElement("div");
-    c.id = `writtenDate`;
-    s.appendChild(c);
-    c.style.transformOrigin = `top left`;
-    c.style.transform = `rotate(90deg)`;
-    c.style.fontFamily= `'Handlee', cursive`;
-    c.style.fontSize = `19px`;
-    c.innerHTML = d;
-  }
- 
-  function writeName(name)
-  {
-    if ($("#writtenName")[0])
-    {
-      c= document.getElementById("writtenName");
-      c.innerHTML = name;
-    }
-    else 
-    {
-      const x = Number($("#scantron")[0].x);
-      const y = Number($("#scantron")[0].y);      
 
-      s = document.createElement("div");
-      s.className = `writtenDiv`;
-      s.width = s.height = 100;
-      s.style.position = "fixed";
-      s.style.top = (y + 460) + "px";
-      s.style.position = "fixed";
-      s.style.left = (x + 350) + "px";
-      s.dataset.relx = 350;
-      s.dataset.rely = 460;
-      $("#scantron")[0].parentElement.appendChild(s);
 
-      c = document.createElement("div");
-      c.id = `writtenName`;
-      s.appendChild(c);
-      c.style.transformOrigin = `top left`;
-      c.style.transform = `rotate(90deg)`;
-      c.style.fontFamily= `'Handlee', cursive`;
-      c.style.fontSize = `30px`;
-      c.innerHTML = name;
-    }
-  }
-
-  function resize(a, b)
-  {
-    const x = Number($("#scantron")[0].x);
-    const y = Number($("#scantron")[0].y);
-    $("canvas").each(
-    (a, b) => { b.style.left = x - 10 + Number(b.dataset.relx) + "px"; b.style.top = y - 10 + Number(b.dataset.rely) + "px"; }  
-    )
-    $(".writtenDiv").each(
-    (a, b) => { b.style.left = x + Number(b.dataset.relx) + "px"; b.style.top = y + Number(b.dataset.rely) + "px"; }  
-    )
-
-  }
-
-  function drawPencil(id, target, x, y)
-  {   
-      c = document.createElement("canvas");
-      c.dataset.container="body";
-      c.dataset.toggle="popover";
-      c.dataset.placement="right";
-      let question = (id.length === 3) ? id[0] + id[1] : id[0]; 
-      let letter = id[id.length-1];
-      c.dataset.content=`You already marked ${letter} for question ${question}. Click the mark again to dismiss this.`;
-      c.id = id;
-      c.width = 20;
-      c.height = 20;
-      c.dataset.relx = Number(x - $("#scantron")[0].x);
-      c.dataset.rely = Number(y - $("#scantron")[0].y); 
-      ctx = c.getContext("2d");
-      ctx.moveTo(0, 10);
-      ctx.lineTo(20, 14);
-      ctx.lineTo(1, 12);
-      ctx.lineTo(20, 11);
-      ctx.lineTo(4, 14);
-      ctx.lineTo(18, 10);
-      ctx.lineTo(0, 10);
-      ctx.lineTo(19, 11);
-      ctx.stroke(); 
-      ctx.moveTo(0,0);
-      target.parentElement.appendChild(c);
-      c.style.position = "fixed";
-      c.style.left = x-10 + "px";
-      c.style.top = y-10 + "px";
-      $(function () {
-        $('[data-toggle="popover"]').popover();
-      }); 
-  }
-  window.addEventListener("resize", resize);
-  document.addEventListener("click", clicked);
-  $( () => { 
-    $("#studentName").keyup((a)=>writeName(a.target.value));
-    $("#studentName").change((a)=>writeName(a.target.value));
-    $("#studentName").submit((a)=>console.log(a.target.value)); 
-    $("form").submit((a)=>a.preventDefault());
-    writeDate();
-  });
-   
-  $.get("employees.json", function(data){
-        a = new Array();
-        data["Report_Entry"].forEach((obj) => a.push(obj["Preferred_Name_-_First_Name"] + " " + obj["Legal_Name_-_Last_Name"]));  
-        $("#studentName").typeahead({ source: a });
-      },'json');
-      
-
-  </script>   
-  <body>
-    
-    <div class="container" id="top-container">
-      <div class="container" id="main-container">
-        <div class="row">
-          <div class="col">
-           <!--  <h1 class="mt-2">Security University</h1> -->
-          </div>
-        </div>
-        <div class="row">
-          <div class="col mt-4 bg-white shadow rounded">
-            <h4 class="mt-4">SEC101: Security Awareness Exam</h4>
-            <hr>
-            <form>
-              <div class="form-group">
-                <h4>Overview</h4>
-
-                <label for="studentName">Student name</label>
-                <input type="name" class="form-control" id="studentName" aria-describedby="nameHelp" placeholder="Name">
-                <small id="nameHelp" class="form-text text-muted">
-                   The test will be tailored to your role. Please start by providing your name. This will be matched with your student information.
-                </small>
-              </div>
-            </form> 
-            <div class="row">
-              <div class="col" id="questions">
-                <h4>Questions</h4>
-                <div class="alert alert-secondary" role="alert">
-                  Use the Scantron&reg; provided at right to complete your test. <br /> Don't forget to use a <strong>No. 2 Pencil &#9999; </strong> (just kidding, click the Scantron&reg; where you would normally mark with a pencil)
+        var employees = {}; 
+        $.get("employees.json", function(data){
+                        a = [];
+                        data["Report_Entry"].forEach((obj) => 
+                                        { 
+                                        const name = obj["Preferred_Name_-_First_Name"] + " " + obj["Legal_Name_-_Last_Name"]; 
+                                        employees[name] = 
+                                        {
+                                        'name': name, 
+                                        'role': obj["roleId"], 
+                                        'obj': obj
+                                        };
+                                        a.push(employees[name]); 
+                                        } 
+                                        );  
+                        employees = a;
+                        $("#studentName").typeahead({ source: a });
+                        },'json');
+    </script>
+    <body>
+        <div class="container" id="top-container">
+            <div class="container" id="main-container">
+                <div class="row">
+                    <div class="col">
+                        <!--  <h1 class="mt-2">Security University</h1> -->
+                    </div>
                 </div>
-                  <ol>
-                  <li start="1">Question</li>
-                  <ol type="A"><li>test</li><li>test 2</li></ol>
-                  <li>Question</li>
-                  <ol type="A"><li>test</li><li>test 2</li></ol>
-                  <li>Question</li>
-                  <ol type="A"><li>test</li><li>test 2</li></ol>
-                  <li>Question</li>
-                  <ol type="A"><li>test</li><li>test 2</li></ol>
-                  <li>Question</li>
-                  <ol type="A"><li>test</li><li>test 2</li></ol>
-                  <li>Question</li>
-                  <ol type="A"><li>test</li><li>test 2</li></ol>
-                  <li>Question</li>
-                  <ol type="A"><li>test</li><li>test 2</li></ol>
-                </ol>
-                <nav>
-                  <ul class="pagination">
-                   <li class="page-item"><a class="page-link" href="#">1</a></li>
-                   <li class="page-item"><a class="page-link" href="#">2</a></li>
-                   <li class="page-item"><a class="page-link" href="#">3</a></li>                
-                   <li class="page-item"><a class="page-link" href="#">></a></li>                
-                 </ul>
-               </nav>
-              </div>
+                <div class="row">
+                    <div class="col mt-4 bg-white shadow rounded">
+                        <h4 class="mt-4">
+                            SEC101: Security Awareness Exam
+                        </h4>
+                        <hr/>
+                        <div class="form-group pg-0">
+                            <form>
+                                <h4>
+                                    Overview
+                                </h4>
+                                <label for="studentName">
+                                    Student name
+                                </label>
+                                <input aria-describedby="nameHelp" class="form-control" id="studentName" placeholder="Name" type="name"/>
+                                <small class="form-text text-muted" id="nameHelp">
+                                    The test will be tailored to your role. Please start by providing your name. This will be matched with your student information.
+                                </small>
+                            </form>
+                        </div>
+                        <div class="row pg-1" style="display: none;">
+                            <div class="col" id="questions">
+                                <h4>
+                                    Questions
+                                </h4>
+                                <div class="alert alert-secondary" role="alert">
+                                    Use the Scantron® provided at right to complete your test. Click the form where you would normally mark with a pencil.
+                                    <br/>
+                                    Don't forget to use a
+                                    <strong>
+                                        ✏ No. 2 Pencil
+                                    </strong>
+                                </div>
+                                <ol>
+                                    <li start="1">
+                                        Question
+                                    </li>
+                                    <ol type="A">
+                                        <li>
+                                            test
+                                        </li>
+                                        <li>
+                                            test 2
+                                        </li>
+                                    </ol>
+                                    <li>
+                                        Question
+                                    </li>
+                                    <ol type="A">
+                                        <li>
+                                            test
+                                        </li>
+                                        <li>
+                                            test 2
+                                        </li>
+                                    </ol>
+                                    <li>
+                                        Question
+                                    </li>
+                                    <ol type="A">
+                                        <li>
+                                            test
+                                        </li>
+                                        <li>
+                                            test 2
+                                        </li>
+                                    </ol>
+                                </ol>
+                                <nav>
+                                    <ul class="pagination">
+                                        <li class="page-item">
+                                            <a class="page-link" href="#">
+                                                1
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#">
+                                                2
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#">
+                                                3
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#">
+                                                &gt;
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                        <div class="row pg-2" style="display: none;"></div>
+                        <div class="row pg-3" style="display: none;"></div>
+                        <div class="row info-bar"><img id="loader" src="ajax-loader2.gif" style="display: none;"></div>  
+                    </div>
+                    <div class="col">
+                        <img draggable="false" id="scantron" src="23160.png" style="position: fixed;"/>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="col"><img id="scantron" draggable="false" style="position: fixed;" src="23160.png"></div>
         </div>
-      </div>
-    </div>
-    
-    
-    <footer class="footer">
-      <small>
-        Security University Quiz App 2019
-      </small>
-    </footer>
-  </body>
+        <footer class="footer">
+            <small>
+                Security University Quiz App 2019
+            </small>
+        </footer>
+    </body>
+</html>
